@@ -35,6 +35,11 @@ Each form has its own directory. Version numbers are included in the Excel workb
 
 ROS forms support the standardised collection and reporting of scientific observer data from fisheries operating in the IOTC area of competence.
 
+- **ROS-GN**: Observer data collected aboard gillnet fishing vessels  
+- **ROS-LL**: Observer data collected aboard longline fishing vessels  
+- **ROS-PL**: Observer data collected aboard pole-and-line fishing vessels  
+- **ROS-PS**: Observer data collected aboard purse seine fishing vessels
+
 Form-specific documentation is available for:
 
 - [Longline (LL)](form_reporting_templates/ROS-LL/README.md)
