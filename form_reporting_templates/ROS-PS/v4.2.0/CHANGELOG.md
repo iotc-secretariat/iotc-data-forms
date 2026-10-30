@@ -25,3 +25,5 @@ Change reference: [V4.2.0 checklist](https://github.com/ultreia-io/iotc-swiop-1.
 - [Fix link] `E-SET-CATCHES!E2` to Fate Types in the current biology catalogue.
 - [Fix link] `E-SET-CATCH-SPECIMENS!E1` to Sampling Methods for Sampling Collections in the current catalogue.
 - [Fix link] `E-SET-CATCH-SPECIMENS!R2` to Biological Materials, matching the collected sample type.
+- [Fix link] FAD Raft Designs and FAD Tail Designs in `E-SET!U3/V3` to the current fisheries catalogue.
+- [Fix link] Sample Preservation Methods in `E-SET-CATCH-SPECIMENS!S2`.
