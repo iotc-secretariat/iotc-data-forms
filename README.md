@@ -37,8 +37,8 @@ ROS forms support the standardised collection and reporting of scientific observ
 
 Form-specific documentation is available for:
 
-- [Longline (LL)](form_reporting_templates/LL/README.md)
-- [Purse seine (PS)](form_reporting_templates/PS/README.md)
+- [Longline (LL)](form_reporting_templates/ROS-LL/README.md)
+- [Purse seine (PS)](form_reporting_templates/ROS-PS/README.md)
 
 Refer to the form-specific README files for available versions, release status and associated documentation.
 
@@ -56,7 +56,7 @@ Forms are organised by form type, with version identifiers included in workbook 
 
 For example, the ROS reporting forms use the following structure:
 
-    form_reporting_templates/LL/
+    form_reporting_templates/ROS-LL/
     ├── README.md
     └── vX.Y.Z/
         ├── Form-ROS-LL-vX.Y.Z.xlsx
