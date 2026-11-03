@@ -1,12 +1,14 @@
 # Libraries
 library(RCurl)
+library(stringr)
+library(data.table)
 
 # Server path configuration
 SERVER_ROOT <- "/reference"
 
-FORMS_FOLDER         <- "forms"
-STATS_FORMS_FOLDER     <- paste0(FORMS_FOLDER, "/stats")
-ROS_FORMS_FOLDER     <- paste0(FORMS_FOLDER, "/ros")
+FORMS_FOLDER        <- "latest_forms"
+STATS_FORMS_FOLDER  <- paste0(FORMS_FOLDER, "/stats/")
+ROS_FORMS_FOLDER    <- paste0(FORMS_FOLDER, "/ros/")
 
 DATA_IOTC_SERVER_IP <- Sys.getenv("DATA_IOTC_SERVER_IP")
 DATA_IOTC_USERNAME  <- Sys.getenv("DATA_IOTC_USERNAME")
@@ -17,8 +19,18 @@ print(paste0("IOTC data username : ", DATA_IOTC_USERNAME))
 print(paste0("IOTC data password : ", str_replace_all(DATA_IOTC_PASSWORD, ".", "*")))
 
 # Upload functions
+# CURL_CMD <- function(url, cmd) {
+#   curlPerform(url = url, quote = cmd)
+# }
+
 CURL_CMD <- function(url, cmd) {
-  curlPerform(url = url, quote = cmd)
+  invisible(
+    curlPerform(
+      url = url,
+      quote = cmd,
+      writefunction = function(x) nchar(x)
+    )
+  )
 }
 
 CURL_FTPu <- function(filename, target_url, asText = FALSE) {
@@ -26,6 +38,13 @@ CURL_FTPu <- function(filename, target_url, asText = FALSE) {
             to = target_url, 
             asText = asText,
             .opts = list(ftp.create.missing.dirs = TRUE))
+}
+
+CURL_FTPd <- function(filename) {
+  CURL_CMD(
+    url = ftp_url("/"),
+    cmd = paste0('rm "', filename, '"')
+  )
 }
 
 check_connection <- function(command) {
@@ -106,62 +125,153 @@ initialize_version <- function(version) {
   initialize_forms(version)
 }
 
-upload_stats_forms <- function(version) {
+# Remove previous reporting forms available from the server 
+clean_reporting_forms <- function(type = c("ros", "stats")) {
   
-  folder <- full_folder(version, FORMS_FOLDER)
+  type <- match.arg(type)
   
-  for(form in list.files("./form_reporting_templates/stats/", pattern = "*.xlsx")) {
-    print(paste0("Uploading form '", form, "' in ", folder, "..."))
+  folder <- switch(
+    type,
+    ros   = full_folder(ROS_FORMS_FOLDER),
+    stats = full_folder(STATS_FORMS_FOLDER)
+  )
+  
+  # Get current files
+  files <- getURL(
+    ftp_url(folder),
+    dirlistonly = TRUE
+  )
+  
+  files <- strsplit(files, "\r?\n")[[1]]
+  files <- files[nzchar(files)]
+  
+  # Only files managed by this release process
+  files <- files[
+    grepl("\\.(xlsx|zip)$", files, ignore.case = TRUE)
+  ]
+  
+  # Delete
+  for (file in files) {
     
-    CURL_FTPu(
-      filename   = paste0("./form_reporting_templates/stats/", form),
-      target_url = ftp_url(paste0(folder, "/", form))
+    remote_file <- paste0(
+      sub("/$", "", folder),
+      "/",
+      file
     )
+    
+    print(paste0(
+      "Removing previous file '",
+      remote_file,
+      "'..."
+    ))
+    
+    CURL_FTPd(remote_file)
   }
   
-  print(paste0("Uploading all statistical forms as a zipped archive in ", folder, "..."))
-  
-  zip::zip(zipfile = "./form_reporting_templates/stats/IOTC-stats-forms.zip", 
-           files = list.files("./form_reporting_templates/stats/", pattern = "Form-.+.xlsx", full.names = TRUE),
-           mode = "cherry-pick")
-  
-  CURL_FTPu(
-    filename   = "./form_reporting_templates/stats/IOTC-stats-forms.zip",
-    target_url = ftp_url(paste0(folder, "/stats/IOTC-stats-forms.zip"))
-  )
+  invisible(files)
 }
 
-upload_ros_forms = function(version) {
-  for(form in list.files("./form_reporting_templates/ros", pattern = "*.xlsx")) {
-    folder = full_folder(version, ROS_FORMS_FOLDER)
+# Add most recent version of reporting forms, including a zip file
+upload_reporting_forms <- function(type = c("ros", "stats")) {
     
-    print(paste0("Uploading form '", form, "' in ", folder, "..."))
+    type <- match.arg(type)
+    
+    # Clean previous public release
+    clean_reporting_forms(type)
+    
+    forms_dir <- file.path("./form_reporting_templates", type)
+    
+    # Get Excel forms
+    files <- list.files(
+      forms_dir,
+      pattern = "\\.xlsx$",
+      recursive = TRUE
+    )
+    
+    # Exclude beta / non-release forms
+    exclude_file <- file.path(forms_dir, "exclude_from_release.txt")
+    
+    if (file.exists(exclude_file)) {
+      
+      excluded <- readLines(exclude_file, warn = FALSE)
+      excluded <- trimws(excluded)
+      excluded <- excluded[nzchar(excluded) & !startsWith(excluded, "#")]
+      
+      files <- setdiff(files, excluded)
+    }
+    
+    # Identify form and version
+    dt <- data.table(file = files)
+    
+    dt[, `:=`(
+      form    = sub("/.*", "", file),
+      version = sub(".*/v([^/]+)/.*", "\\1", file)
+    )]
+    
+    dt[, c("major", "minor", "patch") :=
+         tstrsplit(version, ".", fixed = TRUE, type.convert = TRUE)]
+    
+    # Select latest released version of each form
+    latest <- dt[
+      order(major, minor, patch),
+      .SD[.N],
+      by = form
+    ]
+    
+    latest[, local_file := file.path(forms_dir, file)]
+    
+    # Destination FTP folder
+    folder <- switch(
+      type,
+      ros   = full_folder(ROS_FORMS_FOLDER),
+      stats = full_folder(STATS_FORMS_FOLDER)
+    )
+    
+    # Upload individual forms
+    for (i in seq_len(nrow(latest))) {
+      
+      filename <- basename(latest$file[i])
+      
+      print(paste0(
+        "Uploading form '", filename,
+        "' in ", folder, "..."
+      ))
+      
+      CURL_FTPu(
+        filename   = latest$local_file[i],
+        target_url = ftp_url(paste0(folder, "/", filename))
+      )
+    }
+    
+    # Create archive
+    zip_name <- switch(
+      type,
+      ros   = "IOTC-ROS-forms.zip",
+      stats = "IOTC-statistical-forms.zip"
+    )
+    
+    zipfile <- file.path(forms_dir, zip_name)
+    
+    print(paste0(
+      "Uploading all ", type,
+      " forms as a zipped archive in ", folder, "..."
+    ))
+    
+    zip::zip(
+      zipfile = zipfile,
+      files   = latest$local_file,
+      mode    = "cherry-pick"
+    )
     
     CURL_FTPu(
-      filename   = paste0("./form_reporting_templates/ros/", form),
-      target_url = ftp_url(paste0(folder, "/", form))
+      filename   = zipfile,
+      target_url = ftp_url(paste0(folder, "/", zip_name))
     )
-  }
-
-  print(paste0("Uploading all ROS forms as a zipped archive in ", folder, "..."))
-  
-  zip::zip(zipfile = "./form_reporting_templates/ros/IOTC-ROS-forms.zip", 
-           files = list.files("./form_reporting_templates/ros/", pattern = "Form-.+.xlsx", full.names = TRUE),
-           mode = "cherry-pick")
-  
-  CURL_FTPu(
-    filename   = "./form_reporting_templates/ros/IOTC-ROS-forms.zip",
-    target_url = ftp_url(paste0(folder, "/IOTC-ROS-forms.zip"))
-  )
 }
 
-disseminate <- function(version) {
-  upload_forms(version)
-  upload_ros_forms(version)
-}
+# Load most recent reporting
+upload_reporting_forms("ros")
+upload_reporting_forms("stats")
 
-form_zenodo_version <- "1.0.0"
 
-# Upload IOTC data forms
-disseminate(form_zenodo_version)   
 
