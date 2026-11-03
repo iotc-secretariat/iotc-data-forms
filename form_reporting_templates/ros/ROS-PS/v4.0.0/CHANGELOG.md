@@ -8,6 +8,6 @@ Original filename: `Form-ROS-PS.xlsx`.
 
 ## Changes
 
-- Add separate tag-information sections.
-- Remove transhipment sections.
-- Revise fields and mandatory/optional classifications.
+- [Add section] separate tag-information sections.
+- [Remove section] transhipment sections.
+- [Update field] fields and mandatory/optional classifications.

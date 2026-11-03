@@ -8,7 +8,7 @@ Original filename: `Form-ROS-LL.xlsx`.
 
 ## Changes
 
-- Add separate tag-information sections.
-- Remove transhipment sections.
-- Revise fields and mandatory/optional classifications.
-- Add tori-line and other mitigation-device sections.
+- [Add section] separate tag-information sections.
+- [Add section] tori-line and other mitigation-device sections.
+- [Remove section] transhipment sections.
+- [Update field] fields and mandatory/optional classifications.
