@@ -147,7 +147,8 @@ clean_reporting_forms <- function(type = c("ros", "stats")) {
   
   # Only files managed by this release process
   files <- files[
-    grepl("\\.(xlsx|zip)$", files, ignore.case = TRUE)
+    grepl("\\.(xlsx|zip)$", files, ignore.case = TRUE) |
+      files == "form_versions.csv"
   ]
   
   # Delete
@@ -175,9 +176,6 @@ clean_reporting_forms <- function(type = c("ros", "stats")) {
 upload_reporting_forms <- function(type = c("ros", "stats")) {
     
     type <- match.arg(type)
-    
-    # Clean previous public release
-    clean_reporting_forms(type)
     
     forms_dir <- file.path("./form_reporting_templates", type)
     
@@ -220,12 +218,33 @@ upload_reporting_forms <- function(type = c("ros", "stats")) {
     
     latest[, local_file := file.path(forms_dir, file)]
     
+    # Create manifest to describe the form versions available
+    manifest <- latest[, .(
+      form,
+      version,
+      filename = basename(file)
+    )]
+    
+    manifest[, url := paste0(
+      "https://data.iotc.org/reference/forms/",
+      type,
+      "/",
+      filename
+    )]
+    
+    manifest_file <- file.path(forms_dir, "form_versions.csv")
+    
+    fwrite(manifest, manifest_file)
+    
     # Destination FTP folder
     folder <- switch(
       type,
       ros   = full_folder(ROS_FORMS_FOLDER),
       stats = full_folder(STATS_FORMS_FOLDER)
     )
+    
+    # Clean previous public release
+    clean_reporting_forms(type)
     
     # Upload individual forms
     for (i in seq_len(nrow(latest))) {
@@ -266,6 +285,12 @@ upload_reporting_forms <- function(type = c("ros", "stats")) {
     CURL_FTPu(
       filename   = zipfile,
       target_url = ftp_url(paste0(folder, "/", zip_name))
+    )
+    
+    # Upload release manifest
+    CURL_FTPu(
+      filename   = manifest_file,
+      target_url = ftp_url(paste0(folder, "/form_versions.csv"))
     )
 }
 
