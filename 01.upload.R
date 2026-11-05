@@ -6,7 +6,7 @@ library(data.table)
 # Server path configuration
 SERVER_ROOT <- "/reference"
 
-FORMS_FOLDER        <- "latest_forms"
+FORMS_FOLDER        <- "forms"
 STATS_FORMS_FOLDER  <- paste0(FORMS_FOLDER, "/stats/")
 ROS_FORMS_FOLDER    <- paste0(FORMS_FOLDER, "/ros/")
 
