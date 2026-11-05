@@ -2,7 +2,7 @@
 
 ## Source and version
 
-Source: [IOTC Secretariat repository]().
+Source: [IOTC Secretariat repository](https://github.com/iotc-secretariat/iotc-data-forms/raw/refs/heads/main/form_reporting_templates/stats/1RC/v1.0.1/Form-1RC-v1.0.1.xlsx).
 
 Identification as version 1.0.1.
 
