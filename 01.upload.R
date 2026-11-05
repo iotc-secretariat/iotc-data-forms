@@ -221,7 +221,7 @@ upload_reporting_forms <- function(type = c("ros", "stats")) {
     # Create manifest to describe the form versions available
     manifest <- latest[, .(
       form,
-      version,
+      version = paste0("v", version),
       filename = basename(file)
     )]
     
