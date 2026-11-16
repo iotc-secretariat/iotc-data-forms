@@ -1,0 +1,17 @@
+Field	Description	Requirement
+Recovery date	Date when the gear was recovered	Required
+Latitude	Latitude of the recovery location	Required
+Longitude	Longitude of the recovery location	Required
+Gear type	Type of recovered fishing gear, including FADs	Required
+Quantity recovered	Number of recovered items or gear units	Required
+Estimated weight (kg)	Estimated total weight of recovered gear	Optional
+
+I would consider adding Recovery outcome, with two values:
+- Fully recovered
+- Partially recovered
+
+The Secretariat reviewed Form 6LG, developed in response to paragraph 3 of Recommendation 24/11 on marine pollution, with a view to simplifying the information collected on the recovery of abandoned, lost or discarded fishing gear.
+
+The current form includes detailed information on fishing gear and FAD characteristics, habitat conditions and environmental impacts. To facilitate voluntary reporting by CPCs, the Secretariat proposes replacing the existing structure with a simplified dataset covering the date and location of recovery, type and quantity of gear recovered, and, where available, estimated weight and recovery outcome.
+
+The WPDCS is invited to review the proposed minimum data requirements and provide advice on the revised reporting form.

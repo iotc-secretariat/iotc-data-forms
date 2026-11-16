@@ -13,4 +13,4 @@ Identification as version 1.0.1.
     - IOTC area (column D): <https://data.iotc.org/reference/latest/domain/admin/#iotcMainAreas>  
     - Type (column F): <https://data.iotc.org/reference/latest/domain/data/#dataTypes>  
     - Source (column G): <https://data.iotc.org/reference/latest/domain/data/#dataSourcesRc>  
-    - Source (column H): <https://data.iotc.org/reference/latest/domain/data/#dataProcessingsRc>  
+    - Processing (column H): <https://data.iotc.org/reference/latest/domain/data/#dataProcessingsRc>  
